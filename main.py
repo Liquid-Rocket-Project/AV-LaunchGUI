@@ -9,7 +9,7 @@ Description: Liquid Rocket Project Launch Control GUI prototype.
 import re
 import sys
 
-from pyqtgraph import PlotWidget, mkPen
+from pyqtgraph import PlotWidget, mkPen, setConfigOption
 from PyQt6.QtCore import QDateTime, Qt, QThread, QTimer, pyqtSlot
 from PyQt6.QtGui import QIcon
 from PyQt6.QtSvgWidgets import QSvgWidget
@@ -122,6 +122,7 @@ class RocketDisplayWindow(QMainWindow):
         self.plots = {}
         self.pen = mkPen(color=DETAILING, width=3)
         self.graphData.connect(self.updatePlot)
+        setConfigOption("foreground", f"{DETAILING_H}")  # pyqtgraph setting
 
         # layout
         self.generalLayout = self.createMainGrid()

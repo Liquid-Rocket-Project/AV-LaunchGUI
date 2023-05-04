@@ -12,7 +12,7 @@ from PyQt6.QtGui import QColor, QPalette
 LIGHT = False
 if LIGHT:
     PRIMARY = QColor(200, 200, 200)
-    PRIMARY_H = "#c8c8c8"
+    PRIMARY_H = "#c8c8c8" #"#e1e1e1"
     WHITE = Qt.GlobalColor.white
     DETAILING = QColor(0, 0, 0)
     DETAILING_H = "#000000"
