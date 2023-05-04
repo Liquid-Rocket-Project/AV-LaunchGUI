@@ -87,8 +87,8 @@ TIME = "time"
 DATA = "data"
 TIMESTAMP = "tstamp"
 
-FUEL_GRAPH = "Fuel: Pressure vs Time"
-OX_GRAPH = "Ox: Pressure vs Time"
+FUEL_GRAPH = "Fuel: PSI vs Seconds"
+OX_GRAPH = "Ox: PSI vs Seconds"
 
 
 # MAIN WINDOW ---------------------------------------------------------------|
