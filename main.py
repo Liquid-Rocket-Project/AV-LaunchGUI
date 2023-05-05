@@ -9,6 +9,7 @@ Description: Liquid Rocket Project Launch Control GUI prototype.
 import re
 import sys
 
+from numpy import std
 from pyqtgraph import PlotWidget, mkPen, setConfigOption
 from PyQt6.QtCore import QDateTime, Qt, QThread, QTimer, pyqtSlot
 from PyQt6.QtGui import QIcon
@@ -89,6 +90,10 @@ TIMESTAMP = "tstamp"
 
 FUEL_GRAPH = "Fuel: PSI vs Seconds"
 OX_GRAPH = "Ox: PSI vs Seconds"
+CHANGE_RATE = "AVG CHANGE"
+PSI_OVER_TIME = lambda num: f"{CHANGE_RATE}: %.4f" % num
+
+GRAPH_SAMPLE_SIZE = 120
 
 
 # MAIN WINDOW ---------------------------------------------------------------|
@@ -251,6 +256,7 @@ class RocketDisplayWindow(QMainWindow):
                 self.threadingSetup(self.serial)
                 self.serialOn = True
                 self.buttons[SER_TOGGLE].setText(SER_OFF)
+                self.serStartTime = time.time()
             except serial.SerialException:
                 self.createConfBox(
                     "Serial Error",
@@ -536,7 +542,7 @@ class RocketDisplayWindow(QMainWindow):
         grid.setVerticalSpacing(1)
 
         # top row
-        self.clock = Clock(f"color: {TEXT}; font-family: consolas; font-size: 16px; ")
+        self.clock = Clock(f"color: {TEXT}; {FONT_CSS} {FONT_SIZE(16)}")
 
         grid.addWidget(
             self.createLabelBox(
@@ -775,11 +781,12 @@ class RocketDisplayWindow(QMainWindow):
         """
         widget = PlotWidget()
 
-        time = [0] * 20  # time points
-        data = [0] * 20  # data points
+        # sample size 600 is abt a minute before scrolling
+        time = [0] * GRAPH_SAMPLE_SIZE  # time points
+        data = [0] * GRAPH_SAMPLE_SIZE  # data points
 
         widget.setBackground(f"{PRIMARY_H}")
-        widget.setYRange(-10, 1000)
+        widget.setYRange(-10, 550)
         widget.setMouseEnabled(x=False, y=False)
         widget.hideButtons()
         graph = widget.plot(time, data, pen=self.pen)
@@ -790,6 +797,7 @@ class RocketDisplayWindow(QMainWindow):
             TIME: time,
             DATA: data,
             TIMESTAMP: 0,
+            CHANGE_RATE: QLabel(f"{CHANGE_RATE}: N/A"),
         }
 
         return graphItems
@@ -805,16 +813,19 @@ class RocketDisplayWindow(QMainWindow):
         fuelLabel.setStyleSheet(STAGE_FONT_BLUE)
         self.plots[FUEL_GRAPH] = self.createPlot()
 
+
         oxLabel = QLabel(OX_GRAPH)
         oxLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         oxLabel.setStyleSheet(STAGE_FONT_BLUE)
         self.plots[OX_GRAPH] = self.createPlot()
 
         return [
-            (fuelLabel, 0, 0, 1, 1),
-            (self.plots[FUEL_GRAPH][WIDGET], 1, 0, 1, 1),
-            (oxLabel, 2, 0, 1, 1),
-            (self.plots[OX_GRAPH][WIDGET], 3, 0, 1, 1),
+            (fuelLabel, 0, 0, 5, 5),
+            (self.plots[FUEL_GRAPH][WIDGET], 5, 0, 5, 5),
+            (self.plots[FUEL_GRAPH][CHANGE_RATE], 5, 3, 1, 2),
+            (oxLabel, 10, 0, 5, 5),
+            (self.plots[OX_GRAPH][WIDGET], 15, 0, 5, 5),
+            (self.plots[OX_GRAPH][CHANGE_RATE], 15, 3, 1, 2),
         ]
 
     @pyqtSlot(str, int)
@@ -824,7 +835,7 @@ class RocketDisplayWindow(QMainWindow):
         plot = self.plots[plotName]
 
         # time
-        plot[TIMESTAMP] += int(time.time()) % 10 / 100
+        plot[TIMESTAMP] = time.time() - self.serStartTime
         plot[TIME] = plot[TIME][1:]
         plot[TIME].append(plot[TIMESTAMP])
 
@@ -837,6 +848,7 @@ class RocketDisplayWindow(QMainWindow):
 
         # Update the data.
         plot[GRAPH].setData(plot[TIME], plot[DATA])
+        plot[CHANGE_RATE].setText(PSI_OVER_TIME(std(plot[DATA])))  # numpy
 
     def createButtonSets(self, keys: list[tuple]) -> list[tuple]:
         """Generates a set of buttons compatible with layoutBox
