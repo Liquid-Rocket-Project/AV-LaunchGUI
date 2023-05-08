@@ -71,6 +71,7 @@ PRESSURE_SEP = ", "
 VALVE_TAG = "Toggle PIN"
 VALVE_SEP = " "
 
+
 # Safety Thresholds
 # PTs
 SAFE_PRESS = range(-1000, 400)
@@ -95,7 +96,7 @@ TIMESTAMP = "tstamp"
 FUEL_GRAPH = "Fuel: PSI vs Seconds"
 OX_GRAPH = "Ox: PSI vs Seconds"
 PSI_CHANGE = "PSI/MIN"
-PSI_PER_MIN = lambda num: f"{PSI_CHANGE}: %.4f" % num
+PSI_PER_MIN = lambda num: f"{PSI_CHANGE}: %.1f" % num
 
 GRAPH_SAMPLE_SIZE = 600
 CHANGE_RATE_SAMPLE_SIZE = 100
@@ -346,7 +347,7 @@ class RocketDisplayWindow(QMainWindow):
         for dest, value in dataset:
             try:
                 if SV in dest:
-                    status = int(value.strip())
+                    status = int(value)
                     if status:
                         self.dynamicLabels[dest].setStyleSheet(
                             FONT_CSS + f"color: {VALVE_ON}; "
@@ -391,7 +392,7 @@ class RocketDisplayWindow(QMainWindow):
         """
         with open(DATA_LOG_FILE, "a") as sysLog:
             sysLog.write(self.strFormat(string) + "\n")
-        data = self.parseData(string)
+        data = self.parseData(string.strip('\n'))
         self.updateDisplay(data)
 
     def sendMessage(self, command: (str | None) = None) -> None:
