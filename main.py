@@ -9,7 +9,6 @@ Description: Liquid Rocket Project Launch Control GUI prototype.
 import re
 import sys
 
-from numpy import std
 from pyqtgraph import PlotWidget, mkPen, setConfigOption
 from PyQt6.QtCore import QDateTime, Qt, QThread, QTimer, pyqtSlot
 from PyQt6.QtGui import QIcon
