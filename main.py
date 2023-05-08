@@ -821,7 +821,6 @@ class RocketDisplayWindow(QMainWindow):
         fuelLabel.setStyleSheet(STAGE_FONT_BLUE)
         self.plots[FUEL_GRAPH] = self.createPlot()
 
-
         oxLabel = QLabel(OX_GRAPH)
         oxLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         oxLabel.setStyleSheet(STAGE_FONT_BLUE)
@@ -855,7 +854,6 @@ class RocketDisplayWindow(QMainWindow):
             pass
 
         # Update the data.
-        psiAvgChange = std(plot[DATA])  # numpy std deviation
         psiChangePerMin = (plot[DATA][-1] - plot[DATA][0])
         plot[GRAPH].setData(plot[TIME][-CHANGE_RATE_SAMPLE_SIZE:-1], plot[DATA][-CHANGE_RATE_SAMPLE_SIZE:-1])
         plot[PSI_CHANGE].setText(PSI_PER_MIN(psiChangePerMin))
