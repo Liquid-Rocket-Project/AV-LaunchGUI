@@ -76,6 +76,9 @@ VALVE_SEP = " "
 # PTs
 SAFE_PRESS = range(-1000, 400)
 MID_PRESS = range(401, 501)
+# Avg PSI
+#SAFE_AVG_PRESS = range()
+#MID_AVG_PRESS = range()
 
 # Files
 DATE = QDateTime.currentDateTime().toString("MM-dd-yy")
@@ -95,7 +98,8 @@ OX_GRAPH = "Ox: PSI vs Seconds"
 PSI_CHANGE = "PSI/MIN"
 PSI_PER_MIN = lambda num: f"{PSI_CHANGE}: %.1f" % num
 
-GRAPH_SAMPLE_SIZE = 120
+GRAPH_SAMPLE_SIZE = 600
+CHANGE_RATE_SAMPLE_SIZE = 100
 
 
 # MAIN WINDOW ---------------------------------------------------------------|
@@ -792,6 +796,8 @@ class RocketDisplayWindow(QMainWindow):
         widget.setMouseEnabled(x=False, y=False)
         widget.hideButtons()
         graph = widget.plot(time, data, pen=self.pen)
+        psiChange = QLabel(f"{PSI_CHANGE}: N/A")
+        psiChange.setStyleSheet(f"{GREEN}{BOLD}")
 
         graphItems = {
             WIDGET: widget,
@@ -799,7 +805,7 @@ class RocketDisplayWindow(QMainWindow):
             TIME: time,
             DATA: data,
             TIMESTAMP: 0,
-            CHANGE_RATE: QLabel(f"{CHANGE_RATE}: N/A"),
+            PSI_CHANGE: psiChange,
         }
 
         return graphItems
@@ -815,7 +821,6 @@ class RocketDisplayWindow(QMainWindow):
         fuelLabel.setStyleSheet(STAGE_FONT_BLUE)
         self.plots[FUEL_GRAPH] = self.createPlot()
 
-
         oxLabel = QLabel(OX_GRAPH)
         oxLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         oxLabel.setStyleSheet(STAGE_FONT_BLUE)
@@ -824,10 +829,10 @@ class RocketDisplayWindow(QMainWindow):
         return [
             (fuelLabel, 0, 0, 5, 5),
             (self.plots[FUEL_GRAPH][WIDGET], 5, 0, 5, 5),
-            (self.plots[FUEL_GRAPH][CHANGE_RATE], 5, 3, 1, 2),
+            (self.plots[FUEL_GRAPH][PSI_CHANGE], 5, 3, 1, 2),
             (oxLabel, 10, 0, 5, 5),
             (self.plots[OX_GRAPH][WIDGET], 15, 0, 5, 5),
-            (self.plots[OX_GRAPH][CHANGE_RATE], 15, 3, 1, 2),
+            (self.plots[OX_GRAPH][PSI_CHANGE], 15, 3, 1, 2),
         ]
 
     @pyqtSlot(str, int)
@@ -849,8 +854,9 @@ class RocketDisplayWindow(QMainWindow):
             pass
 
         # Update the data.
-        plot[GRAPH].setData(plot[TIME], plot[DATA])
-        plot[CHANGE_RATE].setText(PSI_OVER_TIME(std(plot[DATA])))  # numpy
+        psiChangePerMin = (plot[DATA][-1] - plot[DATA][0])
+        plot[GRAPH].setData(plot[TIME][-CHANGE_RATE_SAMPLE_SIZE:-1], plot[DATA][-CHANGE_RATE_SAMPLE_SIZE:-1])
+        plot[PSI_CHANGE].setText(PSI_PER_MIN(psiChangePerMin))
 
     def createButtonSets(self, keys: list[tuple]) -> list[tuple]:
         """Generates a set of buttons compatible with layoutBox
