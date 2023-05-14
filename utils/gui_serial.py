@@ -24,7 +24,7 @@ class SerialComm:
         """
         self.port = com
         self.baudrate = baudrate
-        self.connection = serial.Serial(self.port, self.baudrate, timeout=0.01, write_timeout=0.01)
+        self.connection = serial.Serial(self.port, self.baudrate, timeout=0.001, write_timeout=0.001)
 
     def receiveMessage(self) -> str:
         """Read from serial com if there is data in."""
@@ -38,7 +38,7 @@ class SerialComm:
             pass
         return ""
 
-    def readEolLine(self) -> str:
+    def readEolLine(self) -> bytearray:
         """Reads line specifically using LF for eol.
 
         EoL readline by: lou under CC BY-SA 3.0
@@ -56,7 +56,7 @@ class SerialComm:
                     break
             else:
                 break
-        return str(line.decode("ascii"))
+        return line
 
     def sendMessage(self, message: str) -> bool:
         """Writes to serial com."""
@@ -113,6 +113,7 @@ class SerialWorker(QObject):
 
                     try:
                         received = self.serialConnection.connection.readline()
+                        #received = self.serialConnection.readEolLine()
                     except (serial.SerialException, UnicodeDecodeError):
                         self.error.emit()
                         error = True

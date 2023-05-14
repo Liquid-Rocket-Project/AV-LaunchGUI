@@ -9,6 +9,7 @@ Description: Liquid Rocket Project Launch Control GUI prototype.
 import re
 import sys
 
+import numpy as np
 from pyqtgraph import PlotWidget, mkPen, setConfigOption
 from PyQt6.QtCore import QDateTime, Qt, QThread, QTimer, pyqtSlot
 from PyQt6.QtGui import QIcon
@@ -96,9 +97,10 @@ FUEL_GRAPH = "Fuel: PSI vs Seconds"
 OX_GRAPH = "Ox: PSI vs Seconds"
 PSI_CHANGE = "PSI/MIN"
 PSI_PER_MIN = lambda num: f"{PSI_CHANGE}: %.1f" % num
+ROLLING_AVG_SAMPLE_SIZE = 12
 
-GRAPH_SAMPLE_SIZE = 600
-CHANGE_RATE_SAMPLE_SIZE = 100
+PSI_SAMPLE_SIZE = 600
+DISPLAYED_SAMPLE_SIZE = 100
 
 
 # MAIN WINDOW ---------------------------------------------------------------|
@@ -787,8 +789,8 @@ class RocketDisplayWindow(QMainWindow):
         widget = PlotWidget()
 
         # sample size 600 is abt a minute before scrolling
-        time = [0] * GRAPH_SAMPLE_SIZE  # time points
-        data = [0] * GRAPH_SAMPLE_SIZE  # data points
+        time = [0] * PSI_SAMPLE_SIZE  # time points
+        data = [0] * PSI_SAMPLE_SIZE  # data points
 
         widget.setBackground(f"{PRIMARY_H}")
         widget.setYRange(-10, 550)
@@ -853,8 +855,9 @@ class RocketDisplayWindow(QMainWindow):
             pass
 
         # Update the data.
-        psiChangePerMin = (plot[DATA][-1] - plot[DATA][0])
-        plot[GRAPH].setData(plot[TIME][-CHANGE_RATE_SAMPLE_SIZE:-1], plot[DATA][-CHANGE_RATE_SAMPLE_SIZE:-1])
+        #psiChangePerMin = (plot[DATA][-1] - plot[DATA][0])
+        psiChangePerMin = (np.mean(plot[DATA][:ROLLING_AVG_SAMPLE_SIZE] - np.mean(plot[DATA][-ROLLING_AVG_SAMPLE_SIZE:])))
+        plot[GRAPH].setData(plot[TIME][-DISPLAYED_SAMPLE_SIZE:-1], plot[DATA][-DISPLAYED_SAMPLE_SIZE:-1])
         plot[PSI_CHANGE].setText(PSI_PER_MIN(psiChangePerMin))
 
     def createButtonSets(self, keys: list[tuple]) -> list[tuple]:
