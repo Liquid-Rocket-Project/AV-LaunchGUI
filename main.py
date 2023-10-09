@@ -64,7 +64,7 @@ LOCK = "Unlock"
 
 # Pins
 # PIN MAP ##########################
-PIN_MAP = [9, 8, 7, 6, 5, 4, 3, 2, 1]
+PIN_MAP = [8, 7, 6, 5, 4, 3, 2, 1, 9]
 
 ###################################
 COMMAND_LEN = 8
@@ -337,6 +337,7 @@ class RocketDisplayWindow(QMainWindow):
             readings = []
             for i, val in enumerate(data.split(PRESSURE_SEP)):
                 readings.append((f"{PT}{i + 1}", val))
+            print(readings)
             return readings
         return []
 
@@ -1024,8 +1025,8 @@ class RocketDisplayWindow(QMainWindow):
         # have a different function as a parameter, without a lambda for the parameter
         # you'd end up having the same lambda for every button
         svButtons = [
-            lambda num=str(PIN_MAP[i - 1]): self.buttons[SV + num].clicked.connect(
-                lambda: self.sendMessage(num) 
+            lambda label=str(i), num=str(PIN_MAP[i - 1]): self.buttons[SV + label].clicked.connect(
+                lambda: self.sendMessage(num)
             )
             for i in range(1, 10) # range 1 to 9
         ]
