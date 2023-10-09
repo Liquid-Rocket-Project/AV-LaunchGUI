@@ -63,6 +63,10 @@ SERIAL_SEND = "Send"
 LOCK = "Unlock"
 
 # Pins
+# PIN MAP ##########################
+PIN_MAP = [8, 7, 6, 5, 4, 3, 2, 1]
+
+###################################
 COMMAND_LEN = 8
 MSG_PAD = lambda x: x + "0" * (8 - len(x))
 DISP_FORMAT = lambda name, val: f"{name}:{val}"
@@ -397,7 +401,7 @@ class RocketDisplayWindow(QMainWindow):
         self.updateDisplay(data)
 
     def sendMessage(self, command: (str | None) = None) -> None:
-        """Sends a specific message to toggle without starting a preset.
+        """Sends a specific message to toggle.
 
         *Serial Window Core
         """
@@ -410,7 +414,7 @@ class RocketDisplayWindow(QMainWindow):
                     "Duplicate pin detected - please try again.",
                 )
                 return
-            self.displayPrint(f"Send: {command}")
+            self.displayPrint(f"Send: {MSG_PAD(command)}")
             self.serialWorker.sendToggle(MSG_PAD(command))
         else:
             self.createConfBox(
@@ -793,7 +797,7 @@ class RocketDisplayWindow(QMainWindow):
         data = [0] * PSI_SAMPLE_SIZE  # data points
 
         widget.setBackground(f"{PRIMARY_H}")
-        widget.setYRange(-10, 550)
+        widget.setYRange(-50, 550)
         widget.setMouseEnabled(x=False, y=False)
         widget.hideButtons()
         graph = widget.plot(time, data, pen=self.pen)
@@ -1006,14 +1010,26 @@ class RocketDisplayWindow(QMainWindow):
         self.buttons[LOCK].clicked.connect(self.toggleScreenLock)
 
         # create individual SV button initializer functions
-        svButtons = [
-            lambda num=str(i): self.buttons[SV + num].clicked.connect(
-                lambda: self.sendMessage(num)
-            )
-            for i in range(1, 10)
-        ]
+        # old method to list comprehend functions for linking buttons to send respective numbers in range
+        #svButtons = [
+        #    lambda num=str(i): self.buttons[SV + num].clicked.connect(
+        #        lambda: self.sendMessage(num)
+        #    )
+        #    for i in range(1, 10)
+        #]
 
         # call initializer functions to create buttons
+
+        # The two lambdas are needed because you need a list of functions that 
+        # have a different function as a parameter, without a lambda for the parameter
+        # you'd end up having the same lambda for every button
+        svButtons = [
+            lambda num=str(PIN_MAP[i - 1]): self.buttons[SV + num].clicked.connect(
+                lambda: self.sendMessage(num) 
+            )
+            for i in range(1, 10) # range 1 to 9
+        ]
+
         for func in svButtons:
             func()
 
