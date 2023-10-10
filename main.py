@@ -906,32 +906,38 @@ class RocketDisplayWindow(QMainWindow):
 
     def previousStage(self) -> None:
         """Confirms to return to last stage."""
-        if not self.aborted:
+        if self.aborted:
+            if not self.createConfBox(
+                "Stage Regression", "Confirm: exit abort state?", default=False
+            ):
+                return
+            self.aborted = False
+        else:
             if not self.createConfBox(
                 "Stage Regression", "Confirm: return to last stage?", default=False
             ):
                 return
-            if self.currentState - 1 < 0:
-                self.createConfBox(
-                    "Stage Regression", "Cannot return further than first stage."
-                )
-                return
-
-            # Change highlight
-            self.dynamicLabels[LAUNCH_STATES[self.currentState]].setStyleSheet(
-                STAGE_FONT_WHITE
+        if self.currentState - 1 < 0:
+            self.createConfBox(
+                "Stage Regression", "Cannot return further than first stage."
             )
-            self.currentState -= 1
-            self.dynamicLabels[LAUNCH_STATES[self.currentState]].setStyleSheet(
-                STAGE_FONT_BLUE
-            )
+            return
 
-            # Change title
-            self.dynamicLabels[CURR_STATE].setText(
-                f"<h1>STAGE: {LAUNCH_STATES[self.currentState]}</h1>"
-            )
+        # Change highlight
+        self.dynamicLabels[LAUNCH_STATES[self.currentState]].setStyleSheet(
+            STAGE_FONT_WHITE
+        )
+        self.currentState -= 1
+        self.dynamicLabels[LAUNCH_STATES[self.currentState]].setStyleSheet(
+            STAGE_FONT_BLUE
+        )
 
-            self.displayPrint(f"Return to: {LAUNCH_STATES[self.currentState]}")
+        # Change title
+        self.dynamicLabels[CURR_STATE].setText(
+            f"<h1>STAGE: {LAUNCH_STATES[self.currentState]}</h1>"
+        )
+
+        self.displayPrint(f"Return to: {LAUNCH_STATES[self.currentState]}")
 
     def abortMission(self, confirmation: str) -> bool:
         """Abort mission confirmation.
