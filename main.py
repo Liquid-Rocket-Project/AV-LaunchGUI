@@ -73,8 +73,8 @@ MSG_PAD = lambda x: x + "0" * (8 - len(x))
 DISP_FORMAT = lambda name, val: f"{name}:{val}"
 PRESSURE_TAG = ""  # no tag rn
 PRESSURE_SEP = ", "
-VALVE_TAG = "Toggle PIN"
-VALVE_SEP = " "
+VALVE_TAG = "PS"
+#VALVE_SEP = " "
 
 
 # Safety Thresholds
@@ -332,8 +332,8 @@ class RocketDisplayWindow(QMainWindow):
         *Serial Window Core
         """
         if VALVE_TAG in data:
-            pin, value = data.strip(VALVE_TAG).split(VALVE_SEP)
-            return [(SV + PIN_READ_MAP[pin], value)]
+            valve_states = data.strip(VALVE_TAG)
+            return [(SV + PIN_READ_MAP[str(i + 1)], valve_states[i]) for i in range(0, 8)]
         if PRESSURE_SEP in data:
             readings = []
             for i, val in enumerate(data.split(PRESSURE_SEP)):
@@ -911,32 +911,38 @@ class RocketDisplayWindow(QMainWindow):
 
     def previousStage(self) -> None:
         """Confirms to return to last stage."""
-        if not self.aborted:
+        if self.aborted:
+            if not self.createConfBox(
+                "Stage Regression", "Confirm: exit abort state?", default=False
+            ):
+                return
+            self.aborted = False
+        else:
             if not self.createConfBox(
                 "Stage Regression", "Confirm: return to last stage?", default=False
             ):
                 return
-            if self.currentState - 1 < 0:
-                self.createConfBox(
-                    "Stage Regression", "Cannot return further than first stage."
-                )
-                return
-
-            # Change highlight
-            self.dynamicLabels[LAUNCH_STATES[self.currentState]].setStyleSheet(
-                STAGE_FONT_WHITE
+        if self.currentState - 1 < 0:
+            self.createConfBox(
+                "Stage Regression", "Cannot return further than first stage."
             )
-            self.currentState -= 1
-            self.dynamicLabels[LAUNCH_STATES[self.currentState]].setStyleSheet(
-                STAGE_FONT_BLUE
-            )
+            return
 
-            # Change title
-            self.dynamicLabels[CURR_STATE].setText(
-                f"<h1>STAGE: {LAUNCH_STATES[self.currentState]}</h1>"
-            )
+        # Change highlight
+        self.dynamicLabels[LAUNCH_STATES[self.currentState]].setStyleSheet(
+            STAGE_FONT_WHITE
+        )
+        self.currentState -= 1
+        self.dynamicLabels[LAUNCH_STATES[self.currentState]].setStyleSheet(
+            STAGE_FONT_BLUE
+        )
 
-            self.displayPrint(f"Return to: {LAUNCH_STATES[self.currentState]}")
+        # Change title
+        self.dynamicLabels[CURR_STATE].setText(
+            f"<h1>STAGE: {LAUNCH_STATES[self.currentState]}</h1>"
+        )
+
+        self.displayPrint(f"Return to: {LAUNCH_STATES[self.currentState]}")
 
     def abortMission(self, confirmation: str) -> bool:
         """Abort mission confirmation.

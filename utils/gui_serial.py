@@ -24,9 +24,13 @@ class SerialComm:
         """
         self.port = com
         self.baudrate = baudrate
+<<<<<<< HEAD
         self.connection = serial.Serial(
-            self.port, self.baudrate, timeout=0.1, write_timeout=0.1, xonxoff=True
+            self.port, self.baudrate, timeout=0.05, write_timeout=0.1, xonxoff=True
         )
+=======
+        self.connection = serial.Serial(self.port, self.baudrate, timeout=0.05, write_timeout=0.001)
+>>>>>>> e4c15e10ae087a82f8f2f148ea2d7b5e263d0c97
 
     def receiveMessage(self) -> str:
         """Read from serial com if there is data in."""
