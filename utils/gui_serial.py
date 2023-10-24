@@ -24,13 +24,9 @@ class SerialComm:
         """
         self.port = com
         self.baudrate = baudrate
-<<<<<<< HEAD
         self.connection = serial.Serial(
             self.port, self.baudrate, timeout=0.05, write_timeout=0.1, xonxoff=True
         )
-=======
-        self.connection = serial.Serial(self.port, self.baudrate, timeout=0.05, write_timeout=0.001)
->>>>>>> e4c15e10ae087a82f8f2f148ea2d7b5e263d0c97
 
     def receiveMessage(self) -> str:
         """Read from serial com if there is data in."""
@@ -118,9 +114,9 @@ class SerialWorker(QObject):
                 if self.mutex.tryLock():
 
                     try:
-                        #received = self.serialConnection.connection.readline()
-                        received = self.serialConnection.readEolLine()
-                        received = str(received.decode("utf-8"))
+                        received = []
+                        while self.serialConnection.connection.in_waiting > 8:
+                            received.append(self.serialConnection.connection.readline().decode())
                     except (serial.SerialException, UnicodeDecodeError):
                         self.error.emit()
                         error = True
@@ -128,9 +124,10 @@ class SerialWorker(QObject):
 
                     time.sleep(0.05)
                     self.mutex.unlock()
-                    if not received:
+                    if len(received) == 0:
                         continue
-                    self.msg.emit(received)
+                    for x in received:
+                        self.msg.emit(x)
     
         self.cleanup.emit()
 
