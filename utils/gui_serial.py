@@ -115,6 +115,7 @@ class SerialWorker(QObject):
 
                     try:
                         received = []
+                        received.append(self.serialConnection.connection.readline().decode())
                         while self.serialConnection.connection.in_waiting > 8:
                             received.append(self.serialConnection.connection.readline().decode())
                     except (serial.SerialException, UnicodeDecodeError):
