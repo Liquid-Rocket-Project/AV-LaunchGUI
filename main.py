@@ -73,8 +73,8 @@ MSG_PAD = lambda x: x + "0" * (8 - len(x))
 DISP_FORMAT = lambda name, val: f"{name}:{val}"
 PRESSURE_TAG = ""  # no tag rn
 PRESSURE_SEP = ", "
-VALVE_TAG = "Toggle PIN"
-VALVE_SEP = " "
+VALVE_TAG = "PS"
+#VALVE_SEP = " "
 
 
 # Safety Thresholds
@@ -332,8 +332,8 @@ class RocketDisplayWindow(QMainWindow):
         *Serial Window Core
         """
         if VALVE_TAG in data:
-            pin, value = data.strip(VALVE_TAG).split(VALVE_SEP)
-            return [(SV + PIN_READ_MAP[pin], value)]
+            valve_states = data.strip(VALVE_TAG)
+            return [(SV + PIN_READ_MAP[str(i + 1)], valve_states[i]) for i in range(0, 8)]
         if PRESSURE_SEP in data:
             readings = []
             for i, val in enumerate(data.split(PRESSURE_SEP)):

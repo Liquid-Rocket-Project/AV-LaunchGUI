@@ -25,7 +25,7 @@ class SerialComm:
         self.port = com
         self.baudrate = baudrate
         self.connection = serial.Serial(
-            self.port, self.baudrate, timeout=0.1, write_timeout=0.1, xonxoff=True
+            self.port, self.baudrate, timeout=0.05, write_timeout=0.1, xonxoff=True
         )
 
     def receiveMessage(self) -> str:
