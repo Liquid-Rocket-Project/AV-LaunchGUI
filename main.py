@@ -64,7 +64,7 @@ LOCK = "Unlock"
 
 # Pins
 # PIN MAP ##########################
-PIN_MAP = [8, 7, 6, 5, 4, 3, 2, 1, 9]
+PIN_MAP = [9, 5, 7, 6, 2, 1, 8, 3, 4]
 PIN_READ_MAP = {str(x): str(i + 1) for i, x in enumerate(PIN_MAP)}
 
 ###################################
