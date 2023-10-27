@@ -381,9 +381,9 @@ class RocketDisplayWindow(QMainWindow):
 
                     # graphs
                     if dest == PT + "2":  # Ox line
-                        self.graphData.emit(OX_GRAPH, reading)
+                        self.graphData.emit(FUEL_GRAPH, reading) 
                     elif dest == PT + "3":  # Fuel line
-                        self.graphData.emit(FUEL_GRAPH, reading)
+                        self.graphData.emit(OX_GRAPH, reading)
             except KeyError:
                 continue
 
