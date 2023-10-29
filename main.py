@@ -672,6 +672,18 @@ class RocketDisplayWindow(QMainWindow):
             (self.buttons[SERIAL_SEND], 0, 1, 1, 1),
             (self.monitor, 1, 0, 1, 2),
         ]
+    
+    def sendIgnitionCmd(self) -> None:
+        """Sends ignition command when ignite button is pressed."""
+        if self.currentState == len(LAUNCH_STATES) - 1:
+            if self.createConfBox("Ignition Confirm", "Send ignition command?", default=True):
+                self.sendMessage("i")
+    
+    def sendMainValvesCmd(self) -> None:
+        """Sends command to open main valves for fire when MV button is pressed."""
+        if self.currentState == len(LAUNCH_STATES) - 1:
+            if self.createConfBox("Ignition Confirm", "Send ignition command?", default=True):
+                self.sendMessage("m")
 
     def createWireDiagram(self) -> QLabel:
         """Creates wire diagram."""
@@ -771,6 +783,31 @@ class RocketDisplayWindow(QMainWindow):
             ]
         )
 
+        #desperate times call for desperate measures
+        IGNITE = "IGNITE"
+        MV = "MVs"
+        for name in (IGNITE, MV):
+            self.dynamicLabels[name] = QLabel(name)
+            self.dynamicLabels[name].setStyleSheet(SV_CSS)
+            self.dynamicLabels[name].setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.buttons[name] = QPushButton(f"{name}")
+            self.buttons[name].setStyleSheet(BUTTON_STYLE)
+
+        t6 = QLabel("Fire")
+        t6.setStyleSheet(f"{FONT_CSS} color: {DETAILING_H}; {BOLD}")
+        t6.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        box6 = self.createLayoutBox(
+            [
+                (t6, 0, 0, 1, 2),
+                (self.dynamicLabels[IGNITE], 1, 0, 1, 1),
+                (self.buttons[IGNITE], 2, 0, 1, 1),
+                (self.dynamicLabels[MV], 3, 0, 1, 1),
+                (self.buttons[MV], 4, 0, 1, 1),
+            ]
+        )
+        self.buttons[IGNITE].clicked.connect(self.sendIgnitionCmd)
+        self.buttons[MV].clicked.connect(self.sendMainValvesCmd)
+
         self.buttons[LOCK] = QPushButton(LOCK)
         self.buttons[LOCK].setStyleSheet(BUTTON_STYLE)
 
@@ -778,9 +815,10 @@ class RocketDisplayWindow(QMainWindow):
         labelLayout.addWidget(imageLabel, 0, 4, 13, 12)
         labelLayout.addWidget(box1, 1, 0, 3, 2)
         labelLayout.addWidget(box2, 0, 11, 3, 3)
-        labelLayout.addWidget(box3, 6, 0, 4, 2)
+        labelLayout.addWidget(box3, 5, 0, 4, 2)
         labelLayout.addWidget(box4, 5, 14, 4, 2)
         labelLayout.addWidget(box5, 10, 11, 4, 4)
+        labelLayout.addWidget(box6, 10, 0, 4, 2)
         labelLayout.addWidget(self.buttons[LOCK], 14, 0, 1, 2)
 
         return frame
