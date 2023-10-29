@@ -61,6 +61,8 @@ SER_ON = "START SERIAL"
 SER_OFF = "STOP SERIAL"
 SERIAL_SEND = "Send"
 LOCK = "Unlock"
+IGNITE = "IGNITE"
+MV = "MVs"
 
 # Pins
 # PIN MAP ##########################
@@ -784,8 +786,6 @@ class RocketDisplayWindow(QMainWindow):
         )
 
         #desperate times call for desperate measures
-        IGNITE = "IGNITE"
-        MV = "MVs"
         for name in (IGNITE, MV):
             self.dynamicLabels[name] = QLabel(name)
             self.dynamicLabels[name].setStyleSheet(SV_CSS)
@@ -805,8 +805,6 @@ class RocketDisplayWindow(QMainWindow):
                 (self.buttons[MV], 4, 0, 1, 1),
             ]
         )
-        self.buttons[IGNITE].clicked.connect(self.sendIgnitionCmd)
-        self.buttons[MV].clicked.connect(self.sendMainValvesCmd)
 
         self.buttons[LOCK] = QPushButton(LOCK)
         self.buttons[LOCK].setStyleSheet(BUTTON_STYLE)
@@ -1053,6 +1051,8 @@ class RocketDisplayWindow(QMainWindow):
         self.buttons[SETUP_SER].clicked.connect(self.setupSerial)
         self.buttons[SERIAL_SEND].clicked.connect(self.sendMessage)
         self.buttons[LOCK].clicked.connect(self.toggleScreenLock)
+        self.buttons[IGNITE].clicked.connect(self.sendIgnitionCmd)
+        self.buttons[MV].clicked.connect(self.sendMainValvesCmd)
 
         # create individual SV button initializer functions
         # old method to list comprehend functions for linking buttons to send respective numbers in range
