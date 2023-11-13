@@ -1020,6 +1020,7 @@ class RocketDisplayWindow(QMainWindow):
             if self.abortMission("Enter abort state? Main valves will be closed."):
                 self.displayPrint("System abort executed.")
                 self.sendMessage(ABORT_CMD)
+
     # def abortOverpressure(self) -> None:
     #     """Begins overpressurization abort sequence on confirmation."""
     #     if not self.aborted:
