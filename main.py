@@ -53,22 +53,31 @@ PT = "PT"
 # Button Map
 PROCEED = "\nADVANCE STAGE\n"
 PREVIOUS = "\nRETURN TO LAST\n"
-IGNITION_FAILURE = "IGNITION FAIL"
-OVERPRESSURE = "OVERPRESSURE"
+# IGNITION_FAILURE = "IGNITION FAIL"
+# OVERPRESSURE = "OVERPRESSURE"
+ABORT_MISSION = "ABORT MISSION (CLOSE MVs)"
 SETUP_SER = "SERIAL SETTINGS"
 SER_TOGGLE = "START SERIAL"
 SER_ON = "START SERIAL"
 SER_OFF = "STOP SERIAL"
 SERIAL_SEND = "Send"
 LOCK = "Unlock"
+IGNITE = "IGNITE"
+MAINVALVES = "MVs"
 
 # Pins
 # PIN MAP ##########################
-PIN_MAP = [8, 7, 6, 5, 4, 3, 2, 1, 9]
+PIN_MAP = [9, 5, 7, 6, 2, 1, 8, 3, 4]
 PIN_READ_MAP = {str(x): str(i + 1) for i, x in enumerate(PIN_MAP)}
 
 # ANALOG (PT) MAP ##################
-ANALOG_MAP = [1, 2, 3, 4]
+# ANALOG_MAP[1] == num of second analog reading == 3 in [1, 3, 2, 4]
+ANALOG_MAP = [1, 3, 2, 4]
+
+# COMMAND CHARS ####################
+ABORT_CMD = "a"
+MAINVALVE_CMD = "m"
+IGNITE_CMD = "i"
 
 ###################################
 COMMAND_LEN = 8
@@ -384,9 +393,9 @@ class RocketDisplayWindow(QMainWindow):
 
                     # graphs
                     if dest == PT + "2":  # Ox line
-                        self.graphData.emit(OX_GRAPH, reading)
+                        self.graphData.emit(FUEL_GRAPH, reading) 
                     elif dest == PT + "3":  # Fuel line
-                        self.graphData.emit(FUEL_GRAPH, reading)
+                        self.graphData.emit(OX_GRAPH, reading)
             except KeyError:
                 continue
 
@@ -615,7 +624,8 @@ class RocketDisplayWindow(QMainWindow):
         grid.addWidget(
             self.createLayoutBox(
                 self.createButtonSets(
-                    [(OVERPRESSURE, 0, 0, 1, 1), (IGNITION_FAILURE, 0, 1, 1, 1)]
+                    [(ABORT_MISSION, 0, 0, 1, 1)]
+                    #[(OVERPRESSURE, 0, 0, 1, 1), (IGNITION_FAILURE, 0, 1, 1, 1)]
                 )
             ),
             13,
@@ -675,6 +685,20 @@ class RocketDisplayWindow(QMainWindow):
             (self.buttons[SERIAL_SEND], 0, 1, 1, 1),
             (self.monitor, 1, 0, 1, 2),
         ]
+    
+    def sendIgnitionCmd(self) -> None:
+        """Sends ignition command when ignite button is pressed."""
+        if self.currentState == len(LAUNCH_STATES) - 1:
+            if self.createConfBox("Ignition Confirm", "Send ignition command?", default=True):
+                self.sendMessage(IGNITE_CMD)
+                self.dynamicLabels[IGNITE].setStyleSheet(PRESS_YELLOW) # move to updateDisplay via state updates
+    
+    def sendMainValvesCmd(self) -> None:
+        """Sends command to open main valves for fire when MV button is pressed."""
+        if self.currentState == len(LAUNCH_STATES) - 1:
+            if self.createConfBox("Ignition Confirm", "Initiate main valve sequence?", default=True):
+                self.sendMessage(MAINVALVE_CMD)
+                self.dynamicLabels[MAINVALVES].setStyleSheet(PRESS_YELLOW) # move to updateDisplay via state updates
 
     def createWireDiagram(self) -> QLabel:
         """Creates wire diagram."""
@@ -774,6 +798,27 @@ class RocketDisplayWindow(QMainWindow):
             ]
         )
 
+        #desperate times call for desperate measures
+        for name in (IGNITE, MAINVALVES):
+            self.dynamicLabels[name] = QLabel(name)
+            self.dynamicLabels[name].setStyleSheet(SV_CSS)
+            self.dynamicLabels[name].setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.buttons[name] = QPushButton(f"{name}")
+            self.buttons[name].setStyleSheet(BUTTON_STYLE)
+
+        t6 = QLabel("Fire")
+        t6.setStyleSheet(f"{FONT_CSS} color: {DETAILING_H}; {BOLD}")
+        t6.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        box6 = self.createLayoutBox(
+            [
+                (t6, 0, 0, 1, 2),
+                (self.dynamicLabels[IGNITE], 1, 0, 1, 1),
+                (self.buttons[IGNITE], 2, 0, 1, 1),
+                (self.dynamicLabels[MAINVALVES], 3, 0, 1, 1),
+                (self.buttons[MAINVALVES], 4, 0, 1, 1),
+            ]
+        )
+
         self.buttons[LOCK] = QPushButton(LOCK)
         self.buttons[LOCK].setStyleSheet(BUTTON_STYLE)
 
@@ -781,9 +826,10 @@ class RocketDisplayWindow(QMainWindow):
         labelLayout.addWidget(imageLabel, 0, 4, 13, 12)
         labelLayout.addWidget(box1, 1, 0, 3, 2)
         labelLayout.addWidget(box2, 0, 11, 3, 3)
-        labelLayout.addWidget(box3, 6, 0, 4, 2)
+        labelLayout.addWidget(box3, 5, 0, 4, 2)
         labelLayout.addWidget(box4, 5, 14, 4, 2)
         labelLayout.addWidget(box5, 10, 11, 4, 4)
+        labelLayout.addWidget(box6, 10, 0, 4, 2)
         labelLayout.addWidget(self.buttons[LOCK], 14, 0, 1, 2)
 
         return frame
@@ -945,6 +991,10 @@ class RocketDisplayWindow(QMainWindow):
             f"<h1>STAGE: {LAUNCH_STATES[self.currentState]}</h1>"
         )
 
+        # Reset Ignition and MV
+        self.dynamicLabels[IGNITE].setStyleSheet(FONT_CSS + f"color: {TEXT}; ")
+        self.dynamicLabels[MAINVALVES].setStyleSheet(FONT_CSS + f"color: {TEXT}; ")
+
         self.displayPrint(f"Return to: {LAUNCH_STATES[self.currentState]}")
 
     def abortMission(self, confirmation: str) -> bool:
@@ -956,7 +1006,7 @@ class RocketDisplayWindow(QMainWindow):
         Returns:
             bool: abortion confirmation status
         """
-        if self.createConfBox(
+        if LAUNCH_STATES[self.currentState] != 'IDLE' and self.createConfBox(
             "Mission Abort Confirmation", confirmation, default=False
         ):
             self.dynamicLabels[CURR_STATE].setText("<h1> MISSION ABORTED </h1>")
@@ -967,34 +1017,41 @@ class RocketDisplayWindow(QMainWindow):
                 pass
             return True
         return False
-
-    def abortOverpressure(self) -> None:
-        """Begins overpressurization abort sequence on confirmation."""
+    
+    def abortGeneral(self) -> None:
+        """Begins abort sequence on confirmation."""
         if not self.aborted:
-            if self.abortMission("Begin overpressurization abort sequence?"):
-                self.displayPrint("System aborted for overpressurization.")
-                print("Change task display: beginning pressure relief sequence.")
-                print("Close K-bottle SV.")
-                print("Open Bottom right SV")
-                print("Open Bottom Left SV")
-                print("Open Fuel line SV")
-                print("Open Ox line SV")
-                print("Open top center SV")
-                print("Change task display: Overpressure abort sequence complete.")
+            if self.abortMission("Enter abort state? Main valves will be closed."):
+                self.displayPrint("System abort executed.")
+                self.sendMessage(ABORT_CMD)
 
-    def abortIgnitionFail(self) -> None:
-        """Begins ignition fail abort sequence on confirmation."""
-        if not self.aborted:
-            if self.abortMission("Begin ignition fail abort sequence?"):
-                self.displayPrint("System aborted for ignition failure.")
-                print("Change task display: Ignition failure: entering HOLD stage.")
-                print("Closing K-bottle SV")
-                print("Close Bottom right SV")
-                print("Close Bottom Left SV")
-                print("Close Fuel line SV")
-                print("Close Ox line SV")
-                print("Close top center SV")
-                print("Change task display: HOLD STAGE")
+    # def abortOverpressure(self) -> None:
+    #     """Begins overpressurization abort sequence on confirmation."""
+    #     if not self.aborted:
+    #         if self.abortMission("Begin overpressurization abort sequence?"):
+    #             self.displayPrint("System aborted for overpressurization.")
+    #             print("Change task display: beginning pressure relief sequence.")
+    #             print("Close K-bottle SV.")
+    #             print("Open Bottom right SV")
+    #             print("Open Bottom Left SV")
+    #             print("Open Fuel line SV")
+    #             print("Open Ox line SV")
+    #             print("Open top center SV")
+    #             print("Change task display: Overpressure abort sequence complete.")
+
+    # def abortIgnitionFail(self) -> None:
+    #     """Begins ignition fail abort sequence on confirmation."""
+    #     if not self.aborted:
+    #         if self.abortMission("Begin ignition fail abort sequence?"):
+    #             self.displayPrint("System aborted for ignition failure.")
+    #             print("Change task display: Ignition failure: entering HOLD stage.")
+    #             print("Closing K-bottle SV")
+    #             print("Close Bottom right SV")
+    #             print("Close Bottom Left SV")
+    #             print("Close Fuel line SV")
+    #             print("Close Ox line SV")
+    #             print("Close top center SV")
+    #             print("Change task display: HOLD STAGE")
 
     def toggleScreenLock(self) -> None:
         """Toggles acces to buttons."""
@@ -1012,12 +1069,15 @@ class RocketDisplayWindow(QMainWindow):
         """Link buttons to functionality."""
         self.buttons[PROCEED].clicked.connect(self.updateStage)
         self.buttons[PREVIOUS].clicked.connect(self.previousStage)
-        self.buttons[OVERPRESSURE].clicked.connect(self.abortOverpressure)
-        self.buttons[IGNITION_FAILURE].clicked.connect(self.abortIgnitionFail)
+        # self.buttons[OVERPRESSURE].clicked.connect(self.abortOverpressure)
+        # self.buttons[IGNITION_FAILURE].clicked.connect(self.abortIgnitionFail)
+        self.buttons[ABORT_MISSION].clicked.connect(self.abortGeneral)
         self.buttons[SER_TOGGLE].clicked.connect(self.toggleSerial)
         self.buttons[SETUP_SER].clicked.connect(self.setupSerial)
         self.buttons[SERIAL_SEND].clicked.connect(self.sendMessage)
         self.buttons[LOCK].clicked.connect(self.toggleScreenLock)
+        self.buttons[IGNITE].clicked.connect(self.sendIgnitionCmd)
+        self.buttons[MAINVALVES].clicked.connect(self.sendMainValvesCmd)
 
         # create individual SV button initializer functions
         # old method to list comprehend functions for linking buttons to send respective numbers in range
