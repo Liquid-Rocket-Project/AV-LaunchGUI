@@ -67,6 +67,9 @@ LOCK = "Unlock"
 PIN_MAP = [8, 7, 6, 5, 4, 3, 2, 1, 9]
 PIN_READ_MAP = {str(x): str(i + 1) for i, x in enumerate(PIN_MAP)}
 
+# ANALOG (PT) MAP ##################
+ANALOG_MAP = [1, 2, 3, 4]
+
 ###################################
 COMMAND_LEN = 8
 MSG_PAD = lambda x: x + "0" * (8 - len(x))
@@ -337,7 +340,7 @@ class RocketDisplayWindow(QMainWindow):
         if PRESSURE_SEP in data:
             readings = []
             for i, val in enumerate(data.split(PRESSURE_SEP)):
-                readings.append((f"{PT}{i + 1}", val))
+                readings.append((f"{PT}{ANALOG_MAP[i]}", val))
             return readings
         return []
 
