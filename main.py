@@ -72,7 +72,7 @@ PIN_READ_MAP = {str(x): str(i + 1) for i, x in enumerate(PIN_MAP)}
 
 # ANALOG (PT) MAP ##################
 # ANALOG_MAP[1] == num of second analog reading == 3 in [1, 3, 2, 4]
-ANALOG_MAP = [1, 3, 2, 4]
+ANALOG_MAP = [1, 3, 2, 4, 5, 6, 7, 8, 9]
 
 # COMMAND CHARS ####################
 ABORT_CMD = "a"
