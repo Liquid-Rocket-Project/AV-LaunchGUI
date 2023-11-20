@@ -70,6 +70,9 @@ MAINVALVES = "MVs"
 PIN_MAP = [9, 5, 7, 6, 2, 1, 8, 3, 4]
 PIN_READ_MAP = {str(x): str(i + 1) for i, x in enumerate(PIN_MAP)}
 
+OX_PT_NUM = PT + "3"
+FUEL_PT_NUM = PT + "2"
+
 # ANALOG (PT) MAP ##################
 # ANALOG_MAP[1] == num of second analog reading == 3 in [1, 3, 2, 4]
 ANALOG_MAP = [1, 3, 2, 4, 5, 6, 7, 8, 9]
@@ -113,7 +116,7 @@ TIMESTAMP = "tstamp"
 FUEL_GRAPH = "Fuel: PSI vs Seconds"
 OX_GRAPH = "Ox: PSI vs Seconds"
 PSI_CHANGE = "PSI/MIN"
-PSI_PER_MIN = lambda num: f"{PSI_CHANGE}: %.1f" % num
+PSI_PER_MIN = lambda num: f"{PSI_CHANGE}: %.2f" % num
 ROLLING_AVG_SAMPLE_SIZE = 12
 
 PSI_SAMPLE_SIZE = 600
@@ -345,7 +348,7 @@ class RocketDisplayWindow(QMainWindow):
         """
         if VALVE_TAG in data:
             valve_states = data.strip(VALVE_TAG)
-            return [(SV + PIN_READ_MAP[str(i + 1)], valve_states[i]) for i in range(0, 8)]
+            return [(SV + PIN_READ_MAP[str(i + 1)], valve_states[i]) for i in range(0, 9)]
         if PRESSURE_SEP in data:
             readings = []
             for i, val in enumerate(data.split(PRESSURE_SEP)):
@@ -392,9 +395,9 @@ class RocketDisplayWindow(QMainWindow):
                         self.dynamicLabels[dest].setStyleSheet(PRESS_RED)
 
                     # graphs
-                    if dest == PT + "2":  # Ox line
+                    if dest == FUEL_PT_NUM:  # Ox line
                         self.graphData.emit(FUEL_GRAPH, reading) 
-                    elif dest == PT + "3":  # Fuel line
+                    elif dest == OX_PT_NUM:  # Fuel line
                         self.graphData.emit(OX_GRAPH, reading)
             except KeyError:
                 continue
@@ -910,7 +913,7 @@ class RocketDisplayWindow(QMainWindow):
 
         # Update the data.
         #psiChangePerMin = (plot[DATA][-1] - plot[DATA][0])
-        psiChangePerMin = (np.mean(plot[DATA][:ROLLING_AVG_SAMPLE_SIZE] - np.mean(plot[DATA][-ROLLING_AVG_SAMPLE_SIZE:])))
+        psiChangePerMin = (np.mean(plot[DATA][-ROLLING_AVG_SAMPLE_SIZE:]) - np.mean(plot[DATA][:ROLLING_AVG_SAMPLE_SIZE]))
         plot[GRAPH].setData(plot[TIME][-DISPLAYED_SAMPLE_SIZE:-1], plot[DATA][-DISPLAYED_SAMPLE_SIZE:-1])
         plot[PSI_CHANGE].setText(PSI_PER_MIN(psiChangePerMin))
 
