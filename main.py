@@ -67,7 +67,7 @@ MAINVALVES = "MVs"
 
 # Pins
 # PIN MAP ##########################
-PIN_MAP = [9, 5, 7, 6, 2, 1, 8, 3, 4]
+PIN_MAP = range(1, 10)#[9, 5, 7, 6, 2, 1, 8, 3, 4]
 PIN_READ_MAP = {str(x): str(i + 1) for i, x in enumerate(PIN_MAP)}
 
 # ANALOG (PT) MAP ##################
@@ -345,7 +345,7 @@ class RocketDisplayWindow(QMainWindow):
         """
         if VALVE_TAG in data:
             valve_states = data.strip(VALVE_TAG)
-            return [(SV + PIN_READ_MAP[str(i + 1)], valve_states[i]) for i in range(0, 8)]
+            return [(SV + PIN_READ_MAP[str(i + 1)], valve_states[i]) for i in range(0, 9)]
         if PRESSURE_SEP in data:
             readings = []
             for i, val in enumerate(data.split(PRESSURE_SEP)):
