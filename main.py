@@ -51,6 +51,8 @@ SV = "SV"
 PT = "PT"
 DT = "Decay Test"
 DT_STOP = "Stop Test"
+DT_ITERS = 5
+DT_ITER_LEN_SECONDS = 60
 
 # Button Map
 PROCEED = "\nADVANCE STAGE\n"
@@ -705,16 +707,14 @@ class RocketDisplayWindow(QMainWindow):
     def sendIgnitionCmd(self) -> None:
         """Sends ignition command when ignite button is pressed."""
         if self.currentState == len(LAUNCH_STATES) - 1:
-            if self.createConfBox("Ignition Confirm", "Send ignition command?", default=True):
-                self.sendMessage(IGNITE_CMD)
-                self.dynamicLabels[IGNITE].setStyleSheet(PRESS_YELLOW) # move to updateDisplay via state updates
-    
+            self.sendMessage(IGNITE_CMD)
+            self.dynamicLabels[IGNITE].setStyleSheet(PRESS_YELLOW) # move to updateDisplay via state updates
+
     def sendMainValvesCmd(self) -> None:
         """Sends command to open main valves for fire when MV button is pressed."""
         if self.currentState == len(LAUNCH_STATES) - 1:
-            if self.createConfBox("Ignition Confirm", "Initiate main valve sequence?", default=True):
-                self.sendMessage(MAINVALVE_CMD)
-                self.dynamicLabels[MAINVALVES].setStyleSheet(PRESS_YELLOW) # move to updateDisplay via state updates
+            self.sendMessage(MAINVALVE_CMD)
+            self.dynamicLabels[MAINVALVES].setStyleSheet(PRESS_YELLOW) # move to updateDisplay via state updates
 
     def createWireDiagram(self) -> QLabel:
         """Creates wire diagram."""
@@ -1041,9 +1041,8 @@ class RocketDisplayWindow(QMainWindow):
     def abortGeneral(self) -> None:
         """Begins abort sequence on confirmation."""
         if not self.aborted:
-            if self.abortMission("Enter abort state? Main valves will be closed."):
-                self.displayPrint("System abort executed.")
-                self.sendMessage(ABORT_CMD)
+            self.displayPrint("System abort executed.")
+            self.sendMessage(ABORT_CMD)
 
     # def abortOverpressure(self) -> None:
     #     """Begins overpressurization abort sequence on confirmation."""
@@ -1168,8 +1167,8 @@ class RocketDisplayWindow(QMainWindow):
             self.decayTestActive = True
             self.buttons[DT].setText(DT_STOP)
 
-        self.iterations = 5
-        self.it_time = 60
+        self.iterations = DT_ITERS
+        self.it_time = DT_ITER_LEN_SECONDS
         self.dtReadings = {}
         self.dtAvg = {}
         for i in ACTIVE_PTS:
