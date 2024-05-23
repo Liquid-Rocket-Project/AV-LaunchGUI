@@ -49,6 +49,7 @@ CURR_STATE = "StateDisplay"
 ABORT = "Abort"
 SV = "SV"
 PT = "PT"
+DT = "Decay Test"
 
 # Button Map
 PROCEED = "\nADVANCE STAGE\n"
@@ -73,6 +74,18 @@ PIN_READ_MAP = {str(x): str(i + 1) for i, x in enumerate(PIN_MAP)}
 # ANALOG (PT) MAP ##################
 # ANALOG_MAP[1] == num of second analog reading == 3 in [1, 3, 2, 4]
 ANALOG_MAP = [1, 3, 2, 4, 5, 6, 7, 8, 9]
+ACTIVE_PTS = ["PT1", "PT2", "PT3"]
+
+# SV names
+SV_NAMES = {"SV1": "CVENT",
+            "SV2": "CFILL",
+            "SV3": "HP", 
+            "SV4": "FVENT",
+            "SV5": "OX",
+            "SV6": "OVENT",
+            "SV7": "PVENT",
+            "SV8": "OMAIN",
+            "SV9": "FMAIN"}
 
 # COMMAND CHARS ####################
 ABORT_CMD = "a"
@@ -720,7 +733,7 @@ class RocketDisplayWindow(QMainWindow):
             self.dynamicLabels[name].setStyleSheet(SV_CSS)
             self.dynamicLabels[name].setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-            self.buttons[name] = QPushButton(f"{name}")
+            self.buttons[name] = QPushButton(f"{SV_NAMES[name]}")
             self.buttons[name].setStyleSheet(BUTTON_STYLE)
 
         for i in range(1, 5):
@@ -756,7 +769,7 @@ class RocketDisplayWindow(QMainWindow):
             ]
         )
 
-        t3 = QLabel("Ox/N2O GSE")
+        t3 = QLabel("Ox/N2O")
         t3.setAlignment(Qt.AlignmentFlag.AlignCenter)
         t3.setStyleSheet(f"{FONT_CSS} font-size: 11px; color: {DETAILING_H}; {BOLD}")
         box3 = self.createLayoutBox(
@@ -770,7 +783,7 @@ class RocketDisplayWindow(QMainWindow):
             ]
         )
 
-        t4 = QLabel("Fuel")
+        t4 = QLabel("Fuel/Kero")
         t4.setStyleSheet(f"{FONT_CSS} color: {DETAILING_H}; {BOLD};")
         t4.setAlignment(Qt.AlignmentFlag.AlignCenter)
         box4 = self.createLayoutBox(
@@ -797,6 +810,9 @@ class RocketDisplayWindow(QMainWindow):
                 (self.dynamicLabels[PT + "4"], 4, 0, 1, 2),
             ]
         )
+
+        self.buttons[DT] = QPushButton(DT)
+        self.buttons[DT].setStyleSheet(BUTTON_STYLE)
 
         #desperate times call for desperate measures
         for name in (IGNITE, MAINVALVES):
@@ -830,6 +846,7 @@ class RocketDisplayWindow(QMainWindow):
         labelLayout.addWidget(box4, 5, 14, 4, 2)
         labelLayout.addWidget(box5, 10, 11, 4, 4)
         labelLayout.addWidget(box6, 10, 0, 4, 2)
+        labelLayout.addWidget(self.buttons[DT], 14, 11, 1, 4)
         labelLayout.addWidget(self.buttons[LOCK], 14, 0, 1, 2)
 
         return frame
@@ -1078,6 +1095,7 @@ class RocketDisplayWindow(QMainWindow):
         self.buttons[LOCK].clicked.connect(self.toggleScreenLock)
         self.buttons[IGNITE].clicked.connect(self.sendIgnitionCmd)
         self.buttons[MAINVALVES].clicked.connect(self.sendMainValvesCmd)
+        self.buttons[DT].clicked.connect(self.decayTest)
 
         # create individual SV button initializer functions
         # old method to list comprehend functions for linking buttons to send respective numbers in range
@@ -1121,6 +1139,53 @@ class RocketDisplayWindow(QMainWindow):
             self.countdown = QTimer()
             self.countdown.timeout.connect(countSecond)
             self.countdown.start(1000)
+    
+    def decayTest(self) -> None:
+        """Performs decay test."""
+
+        if not self.serialSet or not self.serialOn:
+            self.createConfBox(
+                "Serial Error",
+                "Serial settings not configured.",
+                QMessageBox.Icon.Critical,
+            )
+            return
+
+        self.iterations = 5
+        self.it_time = 60
+        self.dtReadings = {}
+        self.dtAvg = {}
+        for i in ACTIVE_PTS:
+            self.dtReadings[i] = []
+            self.dtAvg[i] = 0
+
+        self.displayPrint(
+            f"Decay Test: {self.iterations} interations, {self.it_time} seconds per iter."
+        )
+
+        def benchmark():
+            if self.iterations == 0:
+                self.decayTimer.stop()
+                avgStr = f"Averages (PSI): "
+                for i in ACTIVE_PTS:
+                    total = np.diff(np.array(self.dtReadings[i]))
+
+                    avgStr += f"{i}-{sum(total) / len(total)} "
+                self.displayPrint(avgStr)
+                self.displayPrint("Decay Test Complete.")
+                return
+            update = f"DT{self.iterations}: "
+            for i in ACTIVE_PTS:
+                r = self.dynamicLabels[i].text().split(":")[1]
+                self.dtReadings[i].append(int(r))
+                update += i + "-" + str(r)
+            self.displayPrint(update)
+            self.iterations -= 1
+
+        benchmark()
+        self.decayTimer = QTimer()
+        self.decayTimer.timeout.connect(benchmark)
+        self.decayTimer.start(self.it_time * 1000)
 
 
 if __name__ == "__main__":
