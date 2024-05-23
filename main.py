@@ -1170,7 +1170,7 @@ class RocketDisplayWindow(QMainWindow):
                 for i in ACTIVE_PTS:
                     total = np.diff(np.array(self.dtReadings[i]))
 
-                    avgStr += f"{i}-{sum(total) / len(total)} "
+                    avgStr += f"{i}-{np.average(total)} "
                 self.displayPrint(avgStr)
                 self.displayPrint("Decay Test Complete.")
                 return
@@ -1178,7 +1178,7 @@ class RocketDisplayWindow(QMainWindow):
             for i in ACTIVE_PTS:
                 r = self.dynamicLabels[i].text().split(":")[1]
                 self.dtReadings[i].append(int(r))
-                update += i + "-" + str(r)
+                update += f"{i}-{r} "
             self.displayPrint(update)
             self.iterations -= 1
 
