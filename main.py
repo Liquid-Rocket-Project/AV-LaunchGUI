@@ -50,6 +50,7 @@ ABORT = "Abort"
 SV = "SV"
 PT = "PT"
 DT = "Decay Test"
+DT_STOP = "Stop Test"
 
 # Button Map
 PROCEED = "\nADVANCE STAGE\n"
@@ -179,6 +180,8 @@ class RocketDisplayWindow(QMainWindow):
 
         self.locked = False
         self.toggleScreenLock()
+
+        self.decayTestActive = False
 
         # log start
         start = "NEW SESSION: " + START_TIME
@@ -1150,6 +1153,20 @@ class RocketDisplayWindow(QMainWindow):
                 QMessageBox.Icon.Critical,
             )
             return
+        
+        if (self.decayTestActive):
+            if self.createConfBox(
+                "Decay Test",
+                "Stop Decay Test?", default=False
+            ):
+                self.decayTimer.stop()
+                self.displayPrint("Decay Test terminated early.")
+                self.decayTestActive = False
+                self.buttons[DT].setText(DT)
+                return
+        else:
+            self.decayTestActive = True
+            self.buttons[DT].setText(DT_STOP)
 
         self.iterations = 5
         self.it_time = 60
@@ -1173,6 +1190,8 @@ class RocketDisplayWindow(QMainWindow):
                     avgStr += f"{i}-{np.average(total)} "
                 self.displayPrint(avgStr)
                 self.displayPrint("Decay Test Complete.")
+                self.decayTestActive = False
+                self.buttons[DT].setText(DT)
                 return
             update = f"DT{self.iterations}: "
             for i in ACTIVE_PTS:
