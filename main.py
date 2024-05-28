@@ -242,7 +242,7 @@ class RocketDisplayWindow(QMainWindow):
             self.centralWidget(),
             "COM select",
             "Select a port:",
-            [f"{desc}" for name, desc, hwid in ports],
+            reversed([f"{desc}" for name, desc, hwid in ports]),
         )
         if not ok:
             return False
@@ -264,7 +264,7 @@ class RocketDisplayWindow(QMainWindow):
             self.centralWidget(),
             "Baudrate select",
             "Select a baudrate:",
-            [str(rate) for rate in BAUDRATES],
+            reversed([str(rate) for rate in BAUDRATES]),
         )
 
         if not ok:
@@ -707,12 +707,14 @@ class RocketDisplayWindow(QMainWindow):
     def sendIgnitionCmd(self) -> None:
         """Sends ignition command when ignite button is pressed."""
         if self.currentState == len(LAUNCH_STATES) - 1:
+            self.displayPrint("Ignition command sent.")
             self.sendMessage(IGNITE_CMD)
             self.dynamicLabels[IGNITE].setStyleSheet(PRESS_YELLOW) # move to updateDisplay via state updates
 
     def sendMainValvesCmd(self) -> None:
         """Sends command to open main valves for fire when MV button is pressed."""
         if self.currentState == len(LAUNCH_STATES) - 1:
+            self.displayPrint("Main valve actuation executed.")
             self.sendMessage(MAINVALVE_CMD)
             self.dynamicLabels[MAINVALVES].setStyleSheet(PRESS_YELLOW) # move to updateDisplay via state updates
 
@@ -746,7 +748,7 @@ class RocketDisplayWindow(QMainWindow):
             self.dynamicLabels[name].setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # boxes
-        t1 = QLabel("N2 GSE")
+        t1 = QLabel("N2/COPV")
         t1.setStyleSheet(f"{FONT_CSS} color: {DETAILING_H}; {BOLD}")
         t1.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
