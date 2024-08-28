@@ -81,14 +81,14 @@ ACTIVE_PTS = ["PT1", "PT2", "PT3"]
 
 # SV names
 SV_NAMES = {"SV1": "CVENT",
-            "SV2": "CFILL",
-            "SV3": "HP", 
-            "SV4": "FVENT",
-            "SV5": "OX",
-            "SV6": "OVENT",
-            "SV7": "PVENT",
-            "SV8": "OMAIN",
-            "SV9": "FMAIN"}
+            "SV2": "N/A", #"CFILL",
+            "SV3": "HIGH PRESS", 
+            "SV4": "FUEL VENT",
+            "SV5": "N/A", #"NITRO FILL"
+            "SV6": "NITRO VENT",
+            "SV7": "P VENT",
+            "SV8": "NITRO MAIN",
+            "SV9": "FUEL MAIN"}
 
 # COMMAND CHARS ####################
 ABORT_CMD = "a"
