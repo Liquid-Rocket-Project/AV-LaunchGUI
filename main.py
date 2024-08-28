@@ -71,7 +71,7 @@ MAINVALVES = "MVs"
 
 # Pins
 # PIN MAP ##########################
-PIN_MAP = range(1, 10)#[9, 5, 7, 6, 2, 1, 8, 3, 4]
+PIN_MAP = [1, 3, 2, 4, 5, 6, 8, 7 , 9]#range(1, 10)#[9, 5, 7, 6, 2, 1, 8, 3, 4]
 PIN_READ_MAP = {str(x): str(i + 1) for i, x in enumerate(PIN_MAP)}
 
 # ANALOG (PT) MAP ##################
